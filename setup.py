@@ -19,7 +19,7 @@ install_requires = ['django>=1.8', 'six', 'jsonpickle']
 dev_requires = ['pytz']
 
 setup(
-    name='django-herald-msg91',
+    name='mindbogglr-django-herald',
     version=VERSION,
     author='Pranay Majmundar',
     author_email='pranay@mindbogglr.com',
@@ -30,8 +30,8 @@ setup(
     packages=find_packages(include=('herald', 'herald.*')),
     include_package_data=True,  # declarations in MANIFEST.in
     license='MIT',
-    url='https://github.com/pranay16/django-herald-msg91/',
-    download_url='https://github.com/pranay16/django-herald-msg91/tarball/'+VERSION,
+    url='https://github.com/pranay16/mindbogglr-django-herald/',
+    download_url='https://github.com/pranay16/mindbogglr-django-herald/tarball/'+VERSION,
     description="Django library for separating the message content from transmission method",
     long_description=read_file('README.md'),
     keywords=['django', 'notifications', 'messaging'],

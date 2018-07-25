@@ -1,6 +1,7 @@
 # django-herald-msg91
 
-[![Latest PyPI version](https://badge.fury.io/py/django-herald-msg91.svg)](https://pypi.python.org/pypi/django-herald-msg91)
+[![Latest PyPI version](https://badge.fury.io/py/mindbogglr-django-herald.svg)](https://pypi.python.org/pypi/mindbogglr-django-herald)
+
 Forked from: [django-herald](https://github.com/worthwhile/django-herald/tree/a0da436e003829b72b87b2bcfdc4d0e5e4449adb)
 
 I've added support for sending messages using the [msg91](https://msg91.com/) platform backend for sending text messages (SMS) in India.
@@ -10,7 +11,7 @@ Please go over the installation steps mentioned in the [original ReadMe](https:/
 # Differences in setup:
 
 ### Installation
-`pip install django-herald-msg91`
+`pip install mindbogglr-django-herald`
 
 ### Usage
 ```python
