@@ -1,9 +1,46 @@
-# django-herald
+# django-herald-msg91
 
-[![Latest PyPI version](https://badge.fury.io/py/django-herald.svg)](https://pypi.python.org/pypi/django-herald)
-[![Build Status](https://travis-ci.org/worthwhile/django-herald.svg?branch=master)](https://travis-ci.org/worthwhile/django-herald)
-[![Coverage Status](https://coveralls.io/repos/github/worthwhile/django-herald/badge.svg?branch=master)](https://coveralls.io/github/worthwhile/django-herald?branch=master)
+[![Latest PyPI version](https://badge.fury.io/py/django-herald-msg91.svg)](https://pypi.python.org/pypi/django-herald-msg91)
+Forked from: [django-herald](https://github.com/worthwhile/django-herald/tree/a0da436e003829b72b87b2bcfdc4d0e5e4449adb)
 
+I've added support for sending messages using the [msg91](https://msg91.com/) platform backend for sending text messages (SMS) in India.
+
+Please go over the installation steps mentioned in the [original ReadMe](https://github.com/worthwhile/django-herald/tree/a0da436e003829b72b87b2bcfdc4d0e5e4449adb)
+
+# Differences in setup:
+
+### Installation
+`pip install django-herald-msg91`
+
+### Usage
+```python
+from herald import registry
+from herald.base import EmailNotification
+
+
+class WelcomeEmail(EmailNotification):  # extend from EmailNotification for emails
+    template_name = 'welcome_email'  # name of template, without extension
+    subject = 'Welcome'  # subject of email
+
+    def __init__(self, user):  # optionally customize the initialization
+        self.context = {'user': user}  # set context for the template rendering
+        self.to_emails = [user.email]  # set list of emails to send to
+
+    @staticmethod
+    def get_demo_args():  # define a static method to return list of args needed to initialize class for testing
+        from users.models import User
+        return [User.objects.order_by('?')[0]]
+
+registry.register(WelcomeEmail)  # finally, register your notification class
+
+# Alternatively, a class decorator can be used to register the notification:
+
+@registry.register_decorator()
+class WelcomeEmail(EmailNotification):
+    ...
+```
+
+# Original ReadMe
 [![Logo](https://github.com/worthwhile/django-herald/blob/master/logo.png)](https://github.com/worthwhile/django-herald)
 
 A Django messaging library that features:
@@ -16,7 +53,7 @@ A Django messaging library that features:
 
 # Python/Django Support
 
-We try to make herald support all versions of django that django supports + all versions in between. 
+We try to make herald support all versions of django that django supports + all versions in between.
 
 For python, herald supports all versions of python that the above versions of django support.
 
@@ -221,7 +258,7 @@ class MyNotification(EmailNotification):
     template_name = 'welcome_email'
     to_emails = ['somebody@example.com']
     subject = "My email test"
-        
+
     def get_attachments(self):
         fp = open('python.jpeg', 'rb')
         img = MIMEImage(fp.read())
@@ -239,7 +276,7 @@ And in your template you would refer to it like this, and you would not need to 
 
 ### Other MIME attachments
 
-You can also attach any MIMEBase objects as regular attachments, but you must add a content-disposition header, or they will be inaccessible:  
+You can also attach any MIMEBase objects as regular attachments, but you must add a content-disposition header, or they will be inaccessible:
 
 ```python
 my_image.add_header('Content-Disposition', 'attachment; filename="python.jpg"')

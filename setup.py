@@ -1,7 +1,7 @@
 import os
 from setuptools import find_packages, setup
 
-VERSION = __import__('herald').__version__
+VERSION = __import__('herald').__version__ + '.1'
 
 
 def read_file(filename):
@@ -19,10 +19,10 @@ install_requires = ['django>=1.8', 'six', 'jsonpickle']
 dev_requires = ['pytz']
 
 setup(
-    name='django-herald',
+    name='django-herald-msg91',
     version=VERSION,
-    author='Worthwhile',
-    author_email='devs@worthwhile.com',
+    author='Pranay Majmundar',
+    author_email='pranay@mindbogglr.com',
     install_requires=install_requires,
     extra_require={
         'dev': install_requires + dev_requires,
@@ -30,8 +30,8 @@ setup(
     packages=find_packages(include=('herald', 'herald.*')),
     include_package_data=True,  # declarations in MANIFEST.in
     license='MIT',
-    url='https://github.com/worthwhile/django-herald/',
-    download_url='https://github.com/worthwhile/django-herald/tarball/'+VERSION,
+    url='https://github.com/pranay16/django-herald-msg91/',
+    download_url='https://github.com/pranay16/django-herald-msg91/tarball/'+VERSION,
     description="Django library for separating the message content from transmission method",
     long_description=read_file('README.md'),
     keywords=['django', 'notifications', 'messaging'],
