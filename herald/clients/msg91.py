@@ -5,7 +5,7 @@ import requests
 
 class Client(object):
     """ A client for accessing the MSG91 API. """
-    API_ENDPOINT = "api.msg91.com"
+    API_ENDPOINT = "http://api.msg91.com"
 
     TRANSACTIONAL_URL = "/api/v2/sendsms"
     TRANSACTIONAL_ROUTE = "4"
