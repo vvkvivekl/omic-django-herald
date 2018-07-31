@@ -41,13 +41,13 @@ class Client(object):
             'content-type': "application/json"
         }
 
-        res = requests.get(url, params={
+        res = requests.post(url, json={
             'sender': sender_id,
             'route': self.TRANSACTIONAL_ROUTE,
-            'sms': {
+            'sms': [{
                 'message': message,
                 'to': [to_number]
-            }
+            }]
         }, headers=headers)
 
         # return json.loads(res.content)
