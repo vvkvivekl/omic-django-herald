@@ -3,6 +3,8 @@ MSG91 Client
 """
 import requests
 
+from urllib.parse import quote
+
 class Client(object):
     """ A client for accessing the MSG91 API. """
     API_ENDPOINT = "http://api.msg91.com"
@@ -41,6 +43,13 @@ class Client(object):
             'content-type': "application/json"
         }
 
+        if len(to_number) < 10:
+            raise Exception(
+                "Invalid mobile number. You have entered less than 10 digits in the mobile number."
+            )
+
+        message = quote(message)
+
         res = requests.post(url, json={
             'sender': sender_id,
             'route': self.TRANSACTIONAL_ROUTE,
@@ -50,5 +59,4 @@ class Client(object):
             }]
         }, headers=headers)
 
-        # return json.loads(res.content)
         return res

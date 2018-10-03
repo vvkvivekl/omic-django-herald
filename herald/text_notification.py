@@ -2,6 +2,8 @@
 This module hold all the classes for the different text notification services
 (except twilio which is implemented in original django-herald)
 """
+import json
+
 from django.conf import settings
 
 from herald.base import NotificationBase
@@ -48,8 +50,13 @@ class Msg91TextNotification(NotificationBase):
                 'to_number must be defined in the notification class'
             )
 
-        client.send_transactional(
+        api_result = client.send_transactional(
             sender_id=sent_from,
-            to_number=recipients[0],
+            to_number=to_number,
             message=text_content
         )
+
+        result = json.loads(api_result.content)
+
+        if result['type'] == 'error':
+            raise Exception(result['message'])
