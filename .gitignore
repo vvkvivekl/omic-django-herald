@@ -63,3 +63,5 @@ target/
 
 # pycharm files
 .idea/
+
+self.notes

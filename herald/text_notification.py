@@ -56,7 +56,7 @@ class Msg91TextNotification(NotificationBase):
             message=text_content
         )
 
-        result = json.loads(api_result.content)
+        result = json.loads(api_result.content.decode("utf-8"))
 
         if result['type'] == 'error':
             raise Exception(result['message'])
