@@ -13,32 +13,35 @@ Please go over the installation steps mentioned in the [original ReadMe](https:/
 ### Installation
 `pip install mindbogglr-django-herald`
 
+### Settings
+In your Django settings file, add the following settings:
+```
+MSG91_TRANSACTIONAL_SENDER_ID = 'SOCKET'
+MSG91_AUTHKEY = '228352HGNg5dF65b57672G'
+```
+Replace 'SOCKET' with any 6 alphebet series that you want in the user's text message inbox.
+Replace '228352HGNg5dF65b57672G' with your authkey from your [msg91](https://msg91.com/) account
+
+**Note:** it'll show up as BT-SOCKET or similar...the first two alphabets indicate the text message provider and the region and is not controllable.
+
 ### Usage
 ```python
 from herald import registry
-from herald.base import EmailNotification
-
-
-class WelcomeEmail(EmailNotification):  # extend from EmailNotification for emails
-    template_name = 'welcome_email'  # name of template, without extension
-    subject = 'Welcome'  # subject of email
-
-    def __init__(self, user):  # optionally customize the initialization
-        self.context = {'user': user}  # set context for the template rendering
-        self.to_emails = [user.email]  # set list of emails to send to
-
-    @staticmethod
-    def get_demo_args():  # define a static method to return list of args needed to initialize class for testing
-        from users.models import User
-        return [User.objects.order_by('?')[0]]
-
-registry.register(WelcomeEmail)  # finally, register your notification class
-
-# Alternatively, a class decorator can be used to register the notification:
+from herald.text_notification import Msg91TextNotification
 
 @registry.register_decorator()
-class WelcomeEmail(EmailNotification):
-    ...
+class InvitationMessage(Msg91TextNotification):
+    template_name = 'invitation_message'  # name of template, without extension
+
+    def __init__(self, to_number, invited_by_user, user_full_name, invitation_url):
+        # set context for the template rendering
+        self.context = {
+            'invited_by_user': invited_by_user,
+            'user_full_name': user_full_name,
+            'invitation_url': invitation_url
+        }
+
+        self.to_number = to_number
 ```
 
 # Original ReadMe
