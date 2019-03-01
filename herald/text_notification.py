@@ -17,11 +17,19 @@ class Msg91TextNotification(NotificationBase):
     render_types = ['text']
     from_number = None
     to_number = None
+    override_sender_id = None
 
     def get_recipients(self):
         return [self.to_number]
 
     def get_sent_from(self):
+        if self.override_sender_id:
+            if len(self.override_sender_id) != 6 or not self.override_sender_id.isalpha():
+                raise Exception(
+                    'override_sender_id must be a 6 alphabets string'
+                )
+
+            return self.override_sender_id
         try:
             sender_id = settings.MSG91_TRANSACTIONAL_SENDER_ID
         except AttributeError:
