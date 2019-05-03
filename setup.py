@@ -1,7 +1,7 @@
 import os
 from setuptools import find_packages, setup
 
-VERSION = __import__('herald').__version__ + '.10'
+VERSION = __import__('herald').__version__ + '.11'
 
 
 def read_file(filename):

@@ -21,6 +21,9 @@ from django.core.files import File
 from .models import SentNotification
 
 
+from html2text import html2text
+
+
 class NotificationBase(object):
     """
     base class for sending notifications
@@ -84,6 +87,12 @@ class NotificationBase(object):
             html_content = self.render('html', context)
         else:
             html_content = None
+
+        # also convert html content to text content
+        if 'html2text' in self.render_types:
+            if html_content:
+                text_content = html2text(html_content)
+
 
         sent_from = self.get_sent_from()
         subject = self.get_subject()
