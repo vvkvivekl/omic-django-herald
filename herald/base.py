@@ -37,7 +37,8 @@ class NotificationBase(object):
     verbose_name = None
 
     sender_doctor_profile_id = None
-    receiver_profile_id = None
+    receiver_patient_profile_id = None
+    receiver_doctor_profile_id = None
 
     def get_context_data(self):
         """
@@ -110,7 +111,8 @@ class NotificationBase(object):
             attachments=self._get_encoded_attachments(),
             user=user,
             sender_doctor_profile_id=self.sender_doctor_profile_id,
-            receiver_profile_id=self.receiver_profile_id,
+            receiver_patient_profile_id=self.receiver_patient_profile_id,
+            receiver_doctor_profile_id=self.receiver_doctor_profile_id,
         )
 
         return self.resend(sent_notification, raise_exception=raise_exception)
