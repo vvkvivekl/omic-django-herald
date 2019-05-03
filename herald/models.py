@@ -42,10 +42,11 @@ class SentNotification(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=None, null=True, on_delete=models.SET_NULL)
     attachments = models.TextField(null=True, blank=True)
     sender_doctor_profile_id = models.IntegerField(null=True, blank=True)
+    receiver_profile_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
         indexes = [
-            models.Index(fields = ['sender_doctor_profile_id']),
+            models.Index(fields = ['sender_doctor_profile_id', 'notification_class']),
         ]
 
 
