@@ -33,6 +33,8 @@ class NotificationBase(object):
     can_disable = True
     verbose_name = None
 
+    sender_doctor_profile_id = None
+
     def get_context_data(self):
         """
         :return: the context data for rendering the email or text template
@@ -97,6 +99,7 @@ class NotificationBase(object):
             notification_class=self.get_class_path(),
             attachments=self._get_encoded_attachments(),
             user=user,
+            sender_doctor_profile_id=self.sender_doctor_profile_id,
         )
 
         return self.resend(sent_notification, raise_exception=raise_exception)

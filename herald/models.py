@@ -41,6 +41,13 @@ class SentNotification(models.Model):
     error_message = models.TextField(null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=None, null=True, on_delete=models.SET_NULL)
     attachments = models.TextField(null=True, blank=True)
+    sender_doctor_profile_id = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields = ['sender_doctor_profile_id']),
+        ]
+
 
     def __str__(self):
         return self.notification_class
