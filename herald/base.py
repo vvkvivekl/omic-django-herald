@@ -40,6 +40,8 @@ class NotificationBase(object):
     receiver_patient_profile_id = None
     receiver_doctor_profile_id = None
 
+    text_character_count = None
+
     def get_context_data(self):
         """
         :return: the context data for rendering the email or text template
@@ -84,6 +86,9 @@ class NotificationBase(object):
             text_content = self.render('text', context)
         else:
             text_content = None
+
+        if text_content:
+            self.text_character_count = len(text_content)
 
         if 'html' in self.render_types:
             html_content = self.render('html', context)
