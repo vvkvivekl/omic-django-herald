@@ -1,7 +1,7 @@
 import os
 from setuptools import find_packages, setup
 
-VERSION = __import__('herald').__version__ + '.17'
+VERSION = __import__('herald').__version__ + '.18'
 
 
 def read_file(filename):
@@ -34,7 +34,7 @@ setup(
     download_url='https://github.com/pranay16/mindbogglr-django-herald/tarball/'+VERSION,
     description="Django library for separating the message content from transmission method",
     long_description=read_file('README.md'),
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
     keywords=['django', 'notifications', 'messaging'],
     classifiers=[
         'Framework :: Django',
