@@ -40,7 +40,7 @@ class NotificationBase(object):
     receiver_patient_profile_id = None
     receiver_doctor_profile_id = None
 
-    text_character_count = None
+    text_character_count = 0
 
     def get_context_data(self):
         """
@@ -87,9 +87,6 @@ class NotificationBase(object):
         else:
             text_content = None
 
-        if text_content:
-            self.text_character_count = len(text_content)
-
         if 'html' in self.render_types:
             html_content = self.render('html', context)
         else:
@@ -100,6 +97,9 @@ class NotificationBase(object):
             if html_content:
                 text_content = html2text(html_content)
 
+
+        if text_content:
+            self.text_character_count = len(text_content)
 
         sent_from = self.get_sent_from()
         subject = self.get_subject()
