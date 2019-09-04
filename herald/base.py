@@ -36,6 +36,7 @@ class NotificationBase(object):
     can_disable = True
     verbose_name = None
 
+    sender_location_id = None
     sender_doctor_profile_id = None
     receiver_patient_profile_id = None
     receiver_doctor_profile_id = None
@@ -115,6 +116,7 @@ class NotificationBase(object):
             notification_class=self.get_class_path(),
             attachments=self._get_encoded_attachments(),
             user=user,
+            sender_location_id=self.sender_location_id,
             sender_doctor_profile_id=self.sender_doctor_profile_id,
             receiver_patient_profile_id=self.receiver_patient_profile_id,
             receiver_doctor_profile_id=self.receiver_doctor_profile_id,
