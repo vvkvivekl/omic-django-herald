@@ -1,10 +1,19 @@
+from datetime import timedelta
+
 import jsonpickle
 from django.core import mail
 from django.core.files import File
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist
 from django.test import TestCase, override_settings
+from django.utils import timezone
+from herald.base import (EmailNotification, NotificationBase,
+                         TwilioTextNotification)
+from herald.models import SentNotification
+
 from mock import patch
+
+from .notifications import MyNotification, MyNotificationAttachmentOpen
 
 try:
     # twilio version 6
@@ -13,19 +22,10 @@ except ImportError:
     # twillio version < 6
     from twilio.rest.resources import Messages as MessageList
 
-from herald.base import NotificationBase, EmailNotification, TwilioTextNotification
-from herald.models import SentNotification
-from .notifications import MyNotification
 
 
 class BaseNotificationTests(TestCase):
     def test_get_context_data(self):
-        with override_settings(DEBUG=True):
-            self.assertDictEqual(
-                MyNotification().get_context_data(),
-                {'hello': 'world', 'base_url': '', 'subject': None}
-            )
-
         self.assertDictEqual(
             MyNotification().get_context_data(),
             {'hello': 'world', 'base_url': 'http://example.com', 'subject': None}
@@ -74,12 +74,18 @@ class BaseNotificationTests(TestCase):
     def test_real_send(self):
         MyNotification().send()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEquals(mail.outbox[0].to, ['test@test.com'])
+        self.assertEqual(mail.outbox[0].to, ['test@test.com'])
 
     def test_real_send_attachments(self):
         MyNotification().send()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].attachments[0][1],'Some Report Data')
+        self.assertEqual(mail.outbox[0].attachments[0][1], 'Some Report Data')
+
+    def test_real_send_attachments_open(self):
+        MyNotificationAttachmentOpen().send()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].attachments[0][0], 'tests/python.jpeg')
+        self.assertEqual(mail.outbox[0].attachments[1][0], 'tests/python.jpeg')
 
     def test_render_no_type(self):
         class DummyNotification(NotificationBase):
@@ -167,6 +173,41 @@ class BaseNotificationTests(TestCase):
         self.assertEqual(attachments[0][0], 'tests/python.jpeg')
         self.assertEqual(attachments[0][2], 'image/jpeg')
 
+    def test_delete_notifications_no_setting(self):
+        # create a test notification from a long time ago
+        SentNotification.objects.create(
+            recipients='test@test.com', date_sent=timezone.now() - timedelta(weeks=52),
+            notification_class='MyNotification'
+        )
+        # create a test notification from recently
+        SentNotification.objects.create(
+            recipients='test@test.com', date_sent=timezone.now() - timedelta(weeks=10),
+            notification_class='MyNotification'
+        )
+        MyNotification().send()
+        # all three were not deleted because we didn't have a setting
+        self.assertEqual(SentNotification.objects.count(), 3)
+
+    @override_settings(HERALD_NOTIFICATION_RETENTION_TIME=timedelta(weeks=26))
+    def test_delete_notifications(self):
+        # create a test notification from a long time ago
+        n1 = SentNotification.objects.create(
+            recipients='test@test.com', date_sent=timezone.now() - timedelta(weeks=52),
+            notification_class='MyNotification'
+        )
+        # create a test notification from recently
+        n2 = SentNotification.objects.create(
+            recipients='test@test.com', date_sent=timezone.now() - timedelta(weeks=10),
+            notification_class='MyNotification'
+        )
+        MyNotification().send()
+
+        # the one from a year ago was deleted, but not the one from 10 weeks ago.
+        self.assertEqual(SentNotification.objects.count(), 2)
+        ids = SentNotification.objects.values_list('id', flat=True)
+        self.assertTrue(n2.id in ids)
+        self.assertFalse(n1.id in ids)
+
 
 class EmailNotificationTests(TestCase):
     def test_get_recipients(self):
@@ -207,6 +248,19 @@ class EmailNotificationTests(TestCase):
             'headers': {'HEADER': 'test'},
             'reply_to': 'reply_to@test.com',
         })
+
+    @override_settings(HERALD_HTML2TEXT_ENABLED=True)
+    def test_render_html2text(self):
+        class TestNotificationHTML2Text(EmailNotification):
+            template_name = 'hello_world_html2text'
+
+        output = TestNotificationHTML2Text().render(render_type='text', context={})
+        self.assertEqual(output, '# Hello World\n\n')
+
+        # Also test with DEBUG on so TemplateDoesNotExist is thrown
+        with override_settings(DEBUG=True):
+            output = TestNotificationHTML2Text().render(render_type='text', context={})
+            self.assertEqual(output, '# Hello World\n\n')
 
     def test_send_html_content(self):
         class TestNotification(EmailNotification):
@@ -268,6 +322,29 @@ class TwilioNotificationTests(TestCase):
                 to='1231231234',
                 from_='1231231234'
             )
+
+    @override_settings(
+        TWILIO_ACCOUNT_SID='sid',
+        TWILIO_AUTH_TOKEN='token'
+    )
+    def test_sending_to_multiple_numbers(self):
+        class TestNotification(TwilioTextNotification):
+            from_number = '1231231234'
+            template_name = 'hello_world'
+
+            def get_recipients(self):
+                return ['1234567890', '0987654321']
+
+        with patch.object(MessageList, 'create') as mocked_create:
+            notification = TestNotification()
+            notification.send()
+            self.assertEqual(mocked_create.call_count, 2)
+            for recipient in notification.get_recipients():
+                mocked_create.assert_any_call(
+                    body='Hello World',
+                    to=recipient,
+                    from_=notification.get_sent_from()
+                )
 
     def test_send_no_settings(self):
         class TestNotification(TwilioTextNotification):

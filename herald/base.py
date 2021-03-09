@@ -50,11 +50,8 @@ class NotificationBase(object):
 
         context = self.context or {}
 
-        if settings.DEBUG:
-            context['base_url'] = ''
-        else:
-            site = Site.objects.get_current()
-            context['base_url'] = 'http://' + site.domain
+        site = Site.objects.get_current()
+        context['base_url'] = 'http://' + site.domain
 
         return context
 
@@ -131,12 +128,30 @@ class NotificationBase(object):
 
         for attachment in attachments or []:
             if isinstance(attachment, File):
-                attachment.seek(0)
+                # cannot do with attachment.open() since django 1.11 doesn't support that
+                attachment.open()
                 new_attachments.append((attachment.name, attachment.read(), guess_type(attachment.name)[0]))
+                attachment.close()
             else:
                 new_attachments.append(attachment)
 
         return jsonpickle.dumps(new_attachments)
+
+    @staticmethod
+    def _delete_expired_notifications():
+        """
+        This deletes any notifications that have passed the retention time setting
+        """
+        retention_time = getattr(settings, 'HERALD_NOTIFICATION_RETENTION_TIME', None)
+
+        if not retention_time:
+            return
+
+        cutoff_date = timezone.now() - retention_time
+
+        notifications = SentNotification.objects.filter(date_sent__lt=cutoff_date)
+        count = notifications.delete()
+        print('Deleted {} expired notifications.'.format(count))
 
     def get_recipients(self):
         """
@@ -158,7 +173,7 @@ class NotificationBase(object):
         Returns a "sent from" string. However the subclass defines that. (email, phone number, etc)
         """
 
-        raise NotImplementedError('Must implement get_recipients.')
+        raise NotImplementedError('Must implement get_sent_from.')
 
     def get_subject(self):
         """
@@ -246,6 +261,8 @@ class NotificationBase(object):
         sent_notification.date_sent = timezone.now()
         sent_notification.save()
 
+        cls._delete_expired_notifications()
+
         return sent_notification.status == sent_notification.STATUS_SUCCESS
 
     @staticmethod
@@ -283,6 +300,7 @@ class EmailNotification(NotificationBase):
 
     def get_sent_from(self):
         from_email = self.from_email
+
         if not from_email:
             from_email = settings.DEFAULT_FROM_EMAIL
 
@@ -315,6 +333,39 @@ class EmailNotification(NotificationBase):
         This only works with email.
         """
         return self.attachments
+
+    def render(self, render_type, context):
+        if render_type == 'text' and getattr(settings, 'HERALD_HTML2TEXT_ENABLED', False):
+            try:
+                content = super(EmailNotification, self).render('text', context)
+
+            # Render plain text version from HTML
+            except TemplateDoesNotExist:
+                content = None
+
+            if content is None:
+                content = self.get_html2text_converter().handle(super(EmailNotification, self).render('html', context))
+        else:
+            content = super(EmailNotification, self).render(render_type, context)
+
+        return content
+
+    @staticmethod
+    def get_html2text_converter():
+        try:
+            import html2text
+        except ImportError:
+            raise Exception(
+                "HTML2Text is required for sending an EmailNotification with auto HTML to text conversion."
+            )
+
+        h = html2text.HTML2Text()
+
+        if hasattr(settings, 'HERALD_HTML2TEXT_CONFIG'):
+            for k, v in settings.HERALD_HTML2TEXT_CONFIG.items():
+                setattr(h, k, v)
+
+        return h
 
     @staticmethod
     def _send(recipients, text_content=None, html_content=None, sent_from=None, subject=None, extra_data=None,
@@ -388,20 +439,19 @@ class TwilioTextNotification(NotificationBase):
                 # twillio version < 6
                 from twilio.rest import TwilioRestClient as Client
             except ImportError:
-                raise Exception('Twilio is required for sending a TwilioTextNotification.')
+                raise Exception(
+                    "Twilio is required for sending a TwilioTextNotification."
+                )
 
         try:
             account_sid = settings.TWILIO_ACCOUNT_SID
             auth_token = settings.TWILIO_AUTH_TOKEN
         except AttributeError:
             raise Exception(
-                'TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN settings are required for sending a TwilioTextNotification'
+                "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN settings are required for sending a TwilioTextNotification"
             )
 
         client = Client(account_sid, auth_token)
 
-        client.messages.create(
-            body=text_content,
-            to=recipients[0],
-            from_=sent_from
-        )
+        for recipient in recipients:
+            client.messages.create(body=text_content, to=recipient, from_=sent_from)

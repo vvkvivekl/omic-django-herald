@@ -5,3 +5,4 @@ twilio
 coveralls
 pytz
 html2text==2018.1.9
+# html2text

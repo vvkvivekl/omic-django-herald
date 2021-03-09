@@ -45,7 +45,7 @@ class InvitationMessage(Msg91TextNotification):
 ```
 
 # Original ReadMe
-[![Logo](https://github.com/worthwhile/django-herald/blob/master/logo.png)](https://github.com/worthwhile/django-herald)
+[![Logo](https://github.com/worthwhile/django-herald/raw/master/logo.png)](https://github.com/worthwhile/django-herald)
 
 A Django messaging library that features:
 
@@ -61,18 +61,20 @@ We try to make herald support all versions of django that django supports + all 
 
 For python, herald supports all versions of python that the above versions of django support.
 
-So as of herald v0.2 we support django 1.11 and 2.0, and python 2.7, 3.4, 3.5, and 3.6.
+So as of herald v0.2 we support django 1.11, 2.0, 2.1, and 2.2, and python 2.7, 3.4, 3.5, 3.6, and 3.7.
 
 ## What version of herald do I need if I have django x and python x?
 
 If the django/python version combination has a `---` in the table, it is not guaranteed to be supported.
 
-|                   | py 2.7   | py 3.3   | py 3.4   | py 3.5   | py 3.6   |
-|:-----------------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-| **dj 1.8**        | <0.2     | <0.2     | <0.2     | <0.2     | ---      |
-| **dj 1.9 - 1.10** | <0.2     | ---      | <0.2     | <0.2     | ---      |
-| **dj 1.11**       | \>=0.1.5 | ---      | \>=0.1.5 | \>=0.1.5 | \>=0.1.5 |
-| **dj 2.0**        | ---      | ---      | \>=0.1.5 | \>=0.1.5 | \>=0.1.5 |
+|                   | py 2.7   | py 3.3   | py 3.4   | py 3.5   | py 3.6   | py 3.7   |
+|:-----------------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
+| **dj 1.8**        | <0.2     | <0.2     | <0.2     | <0.2     | ---      | ---      |
+| **dj 1.9 - 1.10** | <0.2     | ---      | <0.2     | <0.2     | ---      | ---      |
+| **dj 1.11**       | \>=0.1.5 | ---      | \>=0.1.5 | \>=0.1.5 | \>=0.1.5 | ---      |
+| **dj 2.0**        | ---      | ---      | \>=0.1.5 | \>=0.1.5 | \>=0.1.5 | \>=0.2   |
+| **dj 2.1**        | ---      | ---      | ---      | \>=0.2   | \>=0.2   | \>=0.2   |
+| **dj 2.2**        | ---      | ---      | ---      | \>=0.2   | \>=0.2   | \>=0.2   |
 
 
 # Installation
@@ -81,12 +83,12 @@ If the django/python version combination has a `---` in the table, it is not gua
 2. Add `herald` and `django.contrib.sites` to `INSTALLED_APPS`.
 3. Add herald's URLS:
 
-```python
-if settings.DEBUG:
-    urlpatterns = [
-        url(r'^herald/', include('herald.urls')),
-    ] + urlpatterns
-```
+    ```python
+    if settings.DEBUG:
+        urlpatterns = [
+            url(r'^herald/', include('herald.urls')),
+        ] + urlpatterns
+    ```
 
 # Usage
 
@@ -137,8 +139,40 @@ class WelcomeEmail(EmailNotification):
 
 5. View the sent emails in django admin and even be able to resend it.
 
+## Email options
 
-## Deleting Old Notifications
+The following options can be set on the email notification class. For Example:
+
+```
+class WelcomeEmail(EmailNotification):
+    cc = ['test@example.com']
+```
+
+- `from_email`: (`str`, default: `settings.DEFAULT_FROM_EMAIL`) email address of sender
+- `subject`: (`str`, default: ) email subject
+- `to_emails`: (`List[str]`, default: `None`) list of email strings to send to
+- `bcc`: (`List[str]`, default: `None`) list of email strings to send as bcc
+- `cc`: (`List[str]`, default: `None`) list of email strings to send as cc
+- `headers`: (`dict`, default: `None`) extra headers to be passed along to the `EmailMultiAlternatives` object
+- `reply_to`: (`List[str]`, default: `None`) list of email strings to send as the Reply-To emails
+- `attachments`: (`list`) list of attachments. See "Email Attachments" below for more info
+    
+    
+## Automatically Deleting Old Notifications
+
+Herald can automatically delete old notifications whenever a new notification is sent.
+
+To enable this, set the `HERALD_NOTIFICATION_RETENTION_TIME` setting to a timedelta instance.
+
+For example:
+
+```
+HERALD_NOTIFICATION_RETENTION_TIME = timedelta(weeks=8)
+```
+
+Will delete all notifications older than 8 weeks every time a new notification is sent.
+
+## Manually Deleting Old Notifications
 
 The `delnotifs` command is useful for purging the notification history.
 
@@ -276,6 +310,53 @@ And in your template you would refer to it like this, and you would not need to 
 
 ```html
     <img src="cid:python.jpeg" />
+```
+
+### HTML2Text Support
+
+Django Herald can auto convert your HTML emails to plain text.  Any email without a plain text version
+will be auto converted if you enable this feature.
+
+```
+# Install html2text
+pip install django-herald[html2text]
+```
+
+In your settings.py file:
+
+```
+HERALD_HTML2TEXT_ENABLED = True
+```
+
+You can customize the output of HTML2Text by setting a configuration dictionary. See 
+[HTML2Text Configuration](https://github.com/Alir3z4/html2text/blob/master/docs/usage.md) for options
+
+```
+HERALD_HTML2TEXT_CONFIG = {
+    # Key / value configuration of html2text 
+    'ignore_images': True  # Ignores images in conversion
+}
+```
+
+### Twilio
+
+```
+# Install twilio
+pip install django-herald[twilio]
+```
+
+You can retrieve these values on [Twilio Console](https://twilio.com/console). Once you have retrieve the necessary ids, you can place those to your `settings.py`.
+
+For reference, Twilio has some great tutorials for python.
+[Twilio Python Tutorial](https://www.twilio.com/docs/sms/quickstart/python)
+
+```
+# Twilio configurations
+# values taken from `twilio console`
+TWILIO_ACCOUNT_SID = "your_account_sid"
+TWILIO_AUTH_TOKEN = "your_auth_token"
+TWILIO_DEFAULT_FROM_NUMBER = "+1234567890"
+
 ```
 
 ### Other MIME attachments
