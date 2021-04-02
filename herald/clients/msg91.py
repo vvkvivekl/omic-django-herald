@@ -31,7 +31,7 @@ class Client(object):
         return '<MSG91 {}>'.format(self.authkey)
 
 
-    def send_transactional(self, sender_id, to_number, message):
+    def send_transactional(self, sender_id, to_number, message, dlt_template_id):
         """
         Send transactional SMS
         """
@@ -50,13 +50,16 @@ class Client(object):
 
         message = quote(message)
 
-        res = requests.post(url, json={
+        json_request_data = {
             'sender': sender_id,
             'route': self.TRANSACTIONAL_ROUTE,
             'sms': [{
                 'message': message,
                 'to': [to_number]
             }]
-        }, headers=headers)
+        }
+        if dlt_template_id:
+            json_request_data['DLT_TE_ID'] = dlt_template_id
+        res = requests.post(url, json=json_request_data, headers=headers)
 
         return res

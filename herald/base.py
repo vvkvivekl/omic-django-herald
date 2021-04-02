@@ -40,6 +40,7 @@ class NotificationBase(object):
     sender_doctor_profile_id = None
     receiver_patient_profile_id = None
     receiver_doctor_profile_id = None
+    dlt_template_id = None
 
     text_character_count = 0
 
@@ -117,6 +118,7 @@ class NotificationBase(object):
             sender_doctor_profile_id=self.sender_doctor_profile_id,
             receiver_patient_profile_id=self.receiver_patient_profile_id,
             receiver_doctor_profile_id=self.receiver_doctor_profile_id,
+            dlt_template_id=self.dlt_template_id,
         )
 
         return self.resend(sent_notification, raise_exception=raise_exception)
@@ -248,6 +250,7 @@ class NotificationBase(object):
                 sent_notification.subject,
                 sent_notification.get_extra_data(),
                 sent_notification.get_attachments(),
+                sent_notification.dlt_template_id
             )
             sent_notification.status = sent_notification.STATUS_SUCCESS
         except Exception as exc:  # pylint: disable=W0703
@@ -267,7 +270,7 @@ class NotificationBase(object):
 
     @staticmethod
     def _send(recipients, text_content=None, html_content=None, sent_from=None, subject=None, extra_data=None,
-              attachments=None):
+              attachments=None, dlt_template_id = None):
         """
         Handles the actual sending of the notification. Sub classes must override this
         """
@@ -369,7 +372,7 @@ class EmailNotification(NotificationBase):
 
     @staticmethod
     def _send(recipients, text_content=None, html_content=None, sent_from=None, subject=None, extra_data=None,
-              attachments=None):
+              attachments=None, dlt_template_id = None):
 
         extra_data = extra_data or {}
 
@@ -430,7 +433,7 @@ class TwilioTextNotification(NotificationBase):
 
     @staticmethod
     def _send(recipients, text_content=None, html_content=None, sent_from=None, subject=None, extra_data=None,
-              attachments=None):
+              attachments=None, dlt_template_id = None):
         try:
             # twilio version 6
             from twilio.rest import Client

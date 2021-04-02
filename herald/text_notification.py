@@ -42,7 +42,7 @@ class Msg91TextNotification(NotificationBase):
     @staticmethod
     # pylint: disable-msg=R0913
     def _send(recipients, text_content=None, html_content=None, sent_from=None, subject=None,
-              extra_data=None, attachments=None):
+              extra_data=None, attachments=None, dlt_template_id = None):
         try:
             authkey = settings.MSG91_AUTHKEY
         except AttributeError:
@@ -61,7 +61,8 @@ class Msg91TextNotification(NotificationBase):
         api_result = client.send_transactional(
             sender_id=sent_from,
             to_number=to_number,
-            message=text_content
+            message=text_content,
+            dlt_template_id=dlt_template_id
         )
 
         result = json.loads(api_result.content.decode("utf-8"))
